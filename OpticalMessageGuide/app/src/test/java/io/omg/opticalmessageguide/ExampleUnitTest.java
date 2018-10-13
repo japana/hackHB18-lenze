@@ -4,6 +4,8 @@ import org.junit.Assert;
 import org.junit.Test;
 
 import java.io.ByteArrayOutputStream;
+import java.util.Observable;
+import java.util.Observer;
 
 import io.omg.opticalmessageguide.streamprocessor.OMGDecoder;
 
@@ -19,6 +21,13 @@ public class ExampleUnitTest {
 
         String expected = "Hello world";
 
+        Observer observer = new Observer() {
+            @Override
+            public void update(Observable o, Object arg) {
+                System.out.println("update found");
+            }
+        };
+
         byte[] trash = "bbbbbbb".getBytes();
         byte[] header_footer = {OMGDecoder.DIVIDER};
         byte[] helloWorld = expected.getBytes();
@@ -29,11 +38,12 @@ public class ExampleUnitTest {
         os.write(header_footer);
         os.write(trash);
 
-        OMGDecoder encoder = new OMGDecoder();
-        encoder.getOutputStream().write(os.toByteArray());
+        OMGDecoder decoder = new OMGDecoder(observer);
+        decoder.getOutputStream().write(os.toByteArray());
+
         Thread.sleep(1000);
-        String value = encoder.getMsg();
-        encoder.close();
+        String value = decoder.getMsg();
+        decoder.close();
 
 
 
