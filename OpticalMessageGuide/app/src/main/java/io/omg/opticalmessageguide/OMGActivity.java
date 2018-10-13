@@ -238,10 +238,12 @@ public class OMGActivity extends AppCompatActivity implements View.OnTouchListen
         int gap = rectHeight;
 
         int currentByte = 0;
+        int hgap = 0;
 
         for (int i = 0, power = 1; i < 8; i++, power *= 2) {
 
-            Mat submat = frame.submat(offY + gap * i + rectHeight * i, offY + gap * i + rectHeight * (i + 1), offX, offX + rectWidth);
+
+            Mat submat = frame.submat(offY + hgap + rectHeight * i, offY + hgap + rectHeight * (i + 1), offX, offX + rectWidth);
 
             int value;
             boolean status;
@@ -277,7 +279,7 @@ public class OMGActivity extends AppCompatActivity implements View.OnTouchListen
                             + (value)
                             // + ", " + ((int) mean.val[2])
                             + ")",          // Text to be added
-                    new Point(offX + rectWidth * 2, offY + gap * i + rectHeight * (i + 1)),               // point
+                    new Point(offX + rectWidth * 2, offY + hgap + rectHeight * (i + 1)),               // point
                     Core.FONT_HERSHEY_SIMPLEX,      // front face
                     1,                               // front scale
                     new Scalar(0, 0, 255),             // Scalar object for color
@@ -285,8 +287,10 @@ public class OMGActivity extends AppCompatActivity implements View.OnTouchListen
             );
 
             // Draw red rectangle
-            Imgproc.rectangle(currentFrame, new Point(offX, offY + gap * i + rectHeight * i), new Point(offX + rectWidth, offY + gap * i + rectHeight * (i + 1)), new Scalar(255, 0, 0), 3);
+            Imgproc.rectangle(currentFrame, new Point(offX, offY + hgap + rectHeight * i), new Point(offX + rectWidth, offY + hgap + rectHeight * (i + 1)), new Scalar(255, 0, 0), 3);
 
+
+            hgap += (int) (gap * (1 + Math.abs(0.25-i/12.0)));
         }
         return currentByte;
     }
