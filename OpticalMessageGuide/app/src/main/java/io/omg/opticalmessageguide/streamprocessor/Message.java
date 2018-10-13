@@ -8,11 +8,7 @@ public class Message implements Serializable {
     private int errorId;
 
     private String message;
-
-    public Message() {
-
-    }
-
+    
     public Message(long programId, int errorId, String message) {
         this.programId = programId;
         this.errorId = errorId;
