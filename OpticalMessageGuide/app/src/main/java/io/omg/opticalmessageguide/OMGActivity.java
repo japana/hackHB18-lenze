@@ -225,7 +225,11 @@ public class OMGActivity extends AppCompatActivity implements View.OnTouchListen
             // print status text
             Imgproc.putText(
                     currentFrame,                          // Matrix obj of the image
-                    (mean.val[1] > 140 ? "1" : "0") + " (" + ((int) mean.val[0]) + ", " + ((int) mean.val[1]) + ", " + ((int) mean.val[2]) + ")",          // Text to be added
+                    (mean.val[1] > 140 ? "1" : "0") + " ("
+                            // + ((int) mean.val[0]) + ", " +
+                            + ((int) mean.val[1])
+                    // + ", " + ((int) mean.val[2])
+                    + ")",          // Text to be added
                     new Point(offX + rectWidth * 2, offY + gap * i + rectHeight * (i + 1)),               // point
                     Core.FONT_HERSHEY_SIMPLEX,      // front face
                     1,                               // front scale
@@ -234,7 +238,7 @@ public class OMGActivity extends AppCompatActivity implements View.OnTouchListen
             );
             mask.release();
 
-            if (mean.val[1] > 150) {
+            if (mean.val[1] > 120) {
                 currentByte += power;
             }
 
