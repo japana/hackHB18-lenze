@@ -33,6 +33,7 @@ import java.util.Observable;
 import java.util.Observer;
 
 import io.omg.opticalmessageguide.streamprocessor.Message;
+import io.omg.opticalmessageguide.streamprocessor.MessageDecoderStatus;
 import io.omg.opticalmessageguide.streamprocessor.OMGDecoder;
 
 import static org.opencv.core.Core.log;
@@ -167,6 +168,11 @@ public class OMGActivity extends AppCompatActivity implements View.OnTouchListen
     }
 
     public void showMessage(Message message) {
+        try {
+            decoder.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
         Intent intent = new Intent(this, MessageActivity.class);
         intent.putExtra("message", message);
         startActivity(intent);
@@ -183,7 +189,7 @@ public class OMGActivity extends AppCompatActivity implements View.OnTouchListen
         // print status text
         Imgproc.putText(
                 currentFrame,                          // Matrix obj of the image
-                "FPS: "+1000/(nowMillis-millis),          // Text to be added
+                "FPS: " + 1000 / (nowMillis - millis),          // Text to be added
                 new Point(10, 100),               // point
                 Core.FONT_HERSHEY_SIMPLEX,      // front face
                 1,                               // front scale
@@ -191,13 +197,22 @@ public class OMGActivity extends AppCompatActivity implements View.OnTouchListen
                 3                                // Thickness
         );
         millis = nowMillis;
+        Imgproc.putText(
+                currentFrame,                          // Matrix obj of the image
+                decoder.getStatus().name(),          // Text to be added
+                new Point(10, 140),               // point
+                Core.FONT_HERSHEY_SIMPLEX,      // front face
+                1,                               // front scale
+                new Scalar(0, 255, 255),             // Scalar object for color
+                3                                // Thickness
+        );
 
 //        byte currentByte = processImage(currentFrame);
 
         int currentByte = fallbackProcess(currentFrame);
 
         try {
-            if(lastByte == currentByte) {
+            if (lastByte == currentByte) {
                 decoder.getOutputStream().write(currentByte);
             }
         } catch (IOException ex) {
@@ -220,11 +235,13 @@ public class OMGActivity extends AppCompatActivity implements View.OnTouchListen
     public void update(Observable o, Object arg) {
         if (o instanceof OMGDecoder) {
             OMGDecoder omgDecoder = (OMGDecoder) o;
-            showMessage(omgDecoder.getMsg());
-            try {
-                omgDecoder.close();
-            } catch (IOException e) {
-                e.printStackTrace();
+            switch (omgDecoder.getStatus()) {
+                case ERROR:
+                    showMessage(new Message(-1, -1, "Parsing of the Message failed!"));
+                    break;
+                case DONE:
+                    showMessage(omgDecoder.getMsg());
+                    break;
             }
         }
     }
@@ -258,7 +275,7 @@ public class OMGActivity extends AppCompatActivity implements View.OnTouchListen
                 value = 0;
                 for (int y = 0; y < submat.rows(); y++) {
                     for (int x = 0; x < submat.cols(); x++) {
-                        if (submat.get(y, x)[1] > 200) {
+                        if (submat.get(y, x)[1] > 180) {
                             value++;
                         }
                     }
@@ -287,10 +304,10 @@ public class OMGActivity extends AppCompatActivity implements View.OnTouchListen
             );
 
             // Draw red rectangle
-            Imgproc.rectangle(currentFrame, new Point(offX, offY + hgap + rectHeight * i), new Point(offX + rectWidth, offY + hgap + rectHeight * (i + 1)), new Scalar(255, 0, 0), 3);
+            Imgproc.rectangle(currentFrame, new Point(offX, offY + hgap + rectHeight * i), new Point(offX + rectWidth, offY + hgap + rectHeight * (i + 1)), decoder.getStatus() == MessageDecoderStatus.STARTED ? new Scalar(0, 0, 255) : new Scalar(255, 0, 0), 3);
 
 
-            hgap += (int) (gap * (1 + Math.abs(0.25-i/12.0)));
+            hgap += (int) (gap * (1 + Math.abs(0.25 - i / 12.0)));
         }
         return currentByte;
     }
