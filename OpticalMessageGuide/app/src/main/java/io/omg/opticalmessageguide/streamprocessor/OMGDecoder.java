@@ -1,6 +1,7 @@
 package io.omg.opticalmessageguide.streamprocessor;
 
 import android.util.Base64;
+import android.util.Log;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -89,6 +90,7 @@ public class OMGDecoder extends Observable implements MessageDecoder, Runnable {
 
 
     public void encode() throws IOException{
+        Log.d("OMGDecoder", "encode: "+inputStream.read()); /// Workaround because first byte is 255 somehow
         decodeContainerMessage();
     }
 
