@@ -105,13 +105,17 @@ public class PortraitCameraView extends CameraBridgeViewBase implements Camera.P
 //                    {
 //                        params.setFocusMode(Camera.Parameters.FOCUS_MODE_CONTINUOUS_VIDEO);
 //                    } else
-                        if (FocusModes != null && FocusModes.contains(Camera.Parameters.FOCUS_MODE_AUTO))
+//                        if (FocusModes != null && FocusModes.contains(Camera.Parameters.FOCUS_MODE_AUTO))
+//                    {
+//                        params.setFocusMode(Camera.Parameters.FOCUS_MODE_AUTO);
+//                    } else
+//                        if (FocusModes != null && FocusModes.contains(Camera.Parameters.FOCUS_MODE_CONTINUOUS_VIDEO))
+//                    {
+//                        params.setFocusMode(Camera.Parameters.FOCUS_MODE_CONTINUOUS_VIDEO);
+//                    } else
+                    if (FocusModes != null && FocusModes.contains(Camera.Parameters.FOCUS_MODE_CONTINUOUS_PICTURE))
                     {
-                        params.setFocusMode(Camera.Parameters.FOCUS_MODE_AUTO);
-                    } else
-                        if (FocusModes != null && FocusModes.contains(Camera.Parameters.FOCUS_MODE_CONTINUOUS_VIDEO))
-                    {
-                        params.setFocusMode(Camera.Parameters.FOCUS_MODE_CONTINUOUS_VIDEO);
+                        params.setFocusMode(Camera.Parameters.FOCUS_MODE_CONTINUOUS_PICTURE);
                     }
 
                     mCamera.setParameters(params);
