@@ -1,5 +1,7 @@
 package io.omg.opticalmessageguide.streamprocessor;
 
+import android.util.Base64;
+
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -30,6 +32,9 @@ public class OMGDecoder extends Observable implements MessageDecoder, Runnable {
     }
 
     public String getMsg() {
+
+        //byte[] b64 = Base64.decode(payload, Base64.DEFAULT);
+
         return new String(payload);
     }
 
@@ -58,14 +63,17 @@ public class OMGDecoder extends Observable implements MessageDecoder, Runnable {
     public void decodePayload(InputStream inputStr) throws IOException {
         byte[] nextByte = new byte[1];
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        byte lastByte=DIVIDER;
         do {
-
             inputStream.read(nextByte);
-            if (DIVIDER != nextByte[0]) {
-                baos.write(nextByte);
-            } else {
-                setPayload(baos.toByteArray());
-                return;
+            if (lastByte != nextByte[0]) { //skip double bytes. This will be forbidden by design
+                if (DIVIDER != nextByte[0]) {
+                    baos.write(nextByte);
+                } else {
+                    setPayload(baos.toByteArray());
+                    return;
+                }
+                lastByte = nextByte[0];
             }
 
         } while (!finish);

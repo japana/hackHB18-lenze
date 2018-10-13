@@ -19,7 +19,8 @@ public class ExampleUnitTest {
     @Test
     public void testEncoder() throws Exception {
 
-        String expected = "Hello world";
+        String b64Original = "SGVsbG8gV29ybGQgaW4gQmFzZTY0";
+        String expected = "Hello World in Base64";
 
         Observer observer = new Observer() {
             @Override
@@ -44,7 +45,7 @@ public class ExampleUnitTest {
 
             Thread.sleep(1000);
             String value = decoder.getMsg();
-            Assert.assertEquals("whatever", expected, value);
+            Assert.assertEquals("whatever", "Helo World in Base64", value);
         }
 
 
