@@ -5,6 +5,7 @@ import org.apache.commons.codec.binary.Base64;
 import android.util.Log;
 
 import java.io.ByteArrayOutputStream;
+import java.io.Closeable;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -13,7 +14,7 @@ import java.io.PipedOutputStream;
 import java.util.Observable;
 import java.util.Observer;
 
-public class OMGDecoder extends Observable implements MessageDecoder, Runnable {
+public class OMGDecoder extends Observable implements Runnable, Closeable {
 
     public static final byte DIVIDER        = (byte)0b11111111;
     public static final byte REPEATER_1     = (byte)0b10000000;

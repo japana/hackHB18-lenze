@@ -7,6 +7,9 @@ import org.junit.Test;
 import java.io.ByteArrayOutputStream;
 import java.util.Observable;
 import java.util.Observer;
+import java.util.zip.Adler32;
+import java.util.zip.CRC32;
+import java.util.zip.Checksum;
 
 import io.omg.opticalmessageguide.streamprocessor.OMGDecoder;
 
@@ -81,6 +84,19 @@ public class ExampleUnitTest {
         byte b = (byte)0b10000000;
         System.out.println(""+ b + " = "+String.format("%8s", Integer.toBinaryString(b & 0xFF)).replace(' ', '0'));
 
+        Checksum checksum = new Adler32();
+
+
+        // update the current checksum with the specified array of bytes
+        checksum.update(base64, 0, base64.length);
+
+        // get the current checksum value
+        long checksumValue = checksum.getValue();
+
+        System.out.println("CRC32 checksum for input string is: " + Long.toBinaryString(checksumValue));
+
     }
+
+
 
 }
