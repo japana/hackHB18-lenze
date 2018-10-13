@@ -1,5 +1,6 @@
 package io.omg.opticalmessageguide;
 
+import org.apache.commons.codec.binary.Base64;
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -20,7 +21,10 @@ public class ExampleUnitTest {
     public void testEncoder() throws Exception {
 
         String b64Original = "SGVsbG8gV29ybGQgaW4gQmFzZTY0";
+
+
         String expected = "Hello World in Base64";
+        byte[] b64Exp = Base64.encodeBase64(expected.getBytes());
 
         Observer observer = new Observer() {
             @Override
@@ -32,7 +36,19 @@ public class ExampleUnitTest {
 
         byte[] trash = "bbbbbbb".getBytes();
         byte[] header_footer = {OMGDecoder.DIVIDER};
-        byte[] helloWorld = expected.getBytes();
+        byte[] helloWorld = b64Original.getBytes();
+
+        for (byte b:helloWorld) {
+            System.out.println(String.format("%8s", Integer.toBinaryString(b & 0xFF)).replace(' ', '0'));
+        }
+
+
+        System.out.println();
+        for (byte b:b64Exp) {
+            System.out.println(String.format("%8s", Integer.toBinaryString(b & 0xFF)).replace(' ', '0'));
+        }
+
+
         ByteArrayOutputStream os = new ByteArrayOutputStream();
         os.write(trash);
         os.write(header_footer);
@@ -45,11 +61,25 @@ public class ExampleUnitTest {
 
             Thread.sleep(1000);
             String value = decoder.getMsg();
-            Assert.assertEquals("whatever", "Helo World in Base64", value);
+            Assert.assertEquals("whatever", "Hello World in Base64", value);
         }
 
 
 
+
+    }
+
+
+    @Test
+    public void testCreationString() {
+
+        String test = "Hello World";
+        byte[] base64 = Base64.encodeBase64(test.getBytes());
+
+        System.out.println(new String(base64));
+
+        byte b = (byte)0b10000000;
+        System.out.println(""+ b + " = "+String.format("%8s", Integer.toBinaryString(b & 0xFF)).replace(' ', '0'));
 
     }
 
