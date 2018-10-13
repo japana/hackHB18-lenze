@@ -19,8 +19,12 @@ public class MessageActivity extends AppCompatActivity {
         Message msg = (Message)intent.getSerializableExtra("message");
 
         // Capture the layout's TextView and set the string as its text
-        TextView textView = findViewById(R.id.messageTextView);
-        textView.setText(msg.getMessage());
+        TextView messagetextView = findViewById(R.id.messageTextView);
+        messagetextView.setText(msg.getMessage());
+
+        TextView errorCodeTextView = findViewById(R.id.errorCodeTextView);
+        String error = msg.getErrorId()+"";
+        errorCodeTextView.setText(error);
 
     }
 
