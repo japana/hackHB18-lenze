@@ -1,4 +1,5 @@
 <resources>
     <string name="app_name">OpticalMessageGuide</string>
     <string name="scan_button">Scan Again</string>
+    <string name="decoder_status">Decoder Status</string>
 </resources>
