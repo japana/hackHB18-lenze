@@ -24,7 +24,8 @@ public class ExampleUnitTest {
         Observer observer = new Observer() {
             @Override
             public void update(Observable o, Object arg) {
-                System.out.println("update found");
+                OMGDecoder dec = (OMGDecoder) o;
+                System.out.println(dec.getMsg());
             }
         };
 
@@ -38,16 +39,16 @@ public class ExampleUnitTest {
         os.write(header_footer);
         os.write(trash);
 
-        OMGDecoder decoder = new OMGDecoder(observer);
-        decoder.getOutputStream().write(os.toByteArray());
+        try (OMGDecoder decoder = new OMGDecoder(observer)) {
+            decoder.getOutputStream().write(os.toByteArray());
 
-        Thread.sleep(1000);
-        String value = decoder.getMsg();
-        decoder.close();
+            Thread.sleep(1000);
+            String value = decoder.getMsg();
+            Assert.assertEquals("whatever", expected, value);
+        }
 
 
 
-        Assert.assertEquals("whatever", expected, value);
 
     }
 
