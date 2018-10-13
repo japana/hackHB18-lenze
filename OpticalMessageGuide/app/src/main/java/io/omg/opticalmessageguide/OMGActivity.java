@@ -240,7 +240,9 @@ public class OMGActivity extends AppCompatActivity implements View.OnTouchListen
 
         for (int i = 0, power = 1; i < 8; i++, power *= 2) {
 
-            Mat submat = frame.submat(offY + gap * i + rectHeight * i, offY + gap * i + rectHeight * (i + 1), offX, offX + rectWidth);
+            int hgap = (int) (gap * i * (1+Math.abs(0.5-i/8.0)));
+
+            Mat submat = frame.submat(offY + hgap + rectHeight * i, hgap + rectHeight * (i + 1), offX, offX + rectWidth);
 
             int value;
             boolean status;
