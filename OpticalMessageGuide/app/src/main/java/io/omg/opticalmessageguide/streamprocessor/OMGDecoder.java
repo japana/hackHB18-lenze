@@ -15,6 +15,10 @@ import java.nio.ByteBuffer;
 import java.util.Arrays;
 import java.util.Observable;
 import java.util.Observer;
+import java.util.zip.Adler32;
+import java.util.zip.Checksum;
+
+import static android.util.Log.d;
 
 public class OMGDecoder extends Observable implements Runnable, Closeable {
 
@@ -45,9 +49,7 @@ public class OMGDecoder extends Observable implements Runnable, Closeable {
 
     public Message getMsg() {
 
-        byte[] b64 = Base64.decodeBase64(payload);
-
-        return MessageParser.parse(b64);
+        return MessageParser.parse(payload);
     }
 
     public OMGDecoder(Observer... observers) throws IOException {
@@ -80,26 +82,29 @@ public class OMGDecoder extends Observable implements Runnable, Closeable {
         byte lastByte=DIVIDER;
         byte lastByteAdded=0;
         do {
-            inputStream.read(nextByte);
-            if (lastByte != nextByte[0]) { //skip double bytes. This will be forbidden by design
-                switch (nextByte[0]) {
-                    case DIVIDER:
-                        if (verify(baos.toByteArray())) {
-                            setPayload(baos.toByteArray());
-                        } else {
-                            updateStatus(MessageDecoderStatus.ERROR);
-                        }
+            if (inputStream.available()>0) {
+                inputStream.read(nextByte);
+                if (lastByte != nextByte[0]) { //skip double bytes. This will be forbidden by design
+                    switch (nextByte[0]) {
+                        case DIVIDER:
+                            if (verify(baos.toByteArray())) {
+                                setPayload(baos.toByteArray());
+                            } else {
+                                updateStatus(MessageDecoderStatus.ERROR);
+                            }
 
-                        return;
-                    case REPEATER_1:
-                    case REPEATER_2:
-                        baos.write(new byte[] {lastByteAdded});
-                    default:
-                        baos.write(nextByte);
-                        lastByteAdded = nextByte[0];
+                            return;
+                        case REPEATER_1:
+                        case REPEATER_2:
+                            baos.write(new byte[] {lastByteAdded});
+                            break;
+                        default:
+                            baos.write(nextByte);
+                            lastByteAdded = nextByte[0];
+                    }
+
+                    lastByte = nextByte[0];
                 }
-
-                lastByte = nextByte[0];
             }
 
         } while (!finish);
@@ -107,20 +112,43 @@ public class OMGDecoder extends Observable implements Runnable, Closeable {
     }
 
     private boolean verify(byte[] bytes) {
-//        byte[] data = Arrays.copyOf(bytes, bytes.length - 4);
-//        byte[] checksum = Arrays.
-        return true;
+        try {
+            Log.i("OMGDecoder",new String(bytes));
+            byte[] decodedData = Base64.decodeBase64(bytes);
+
+            byte[] payload = Arrays.copyOf(decodedData, decodedData.length - 4);
+            byte[] checksum_data = Arrays.copyOfRange(decodedData, decodedData.length - 4, decodedData.length);
+
+            Checksum checksum = new Adler32();
+
+            // update the current checksum with the specified array of bytes
+            checksum.update(payload, 0, payload.length);
+
+            // get the current checksum value
+            long checksumValueCalculated = checksum.getValue();
+
+            ByteBuffer buffer = ByteBuffer.allocate(Integer.BYTES);
+            buffer.put(checksum_data);
+            buffer.flip();//need flip
+            int checksumValueFromData = buffer.getInt();
+
+            Log.i("OMGDecoder", String.format("ChecksumFromData=%d  checksumValueCalculated=%d", checksumValueFromData, checksumValueCalculated));
+            return checksumValueFromData == checksumValueCalculated;
+        } catch (Exception e) {
+            Log.e("OMGDecoder", e.getMessage(), e);
+            return false;
+        }
     }
 
-    public void setPayload(byte[] payload) {
-        this.payload = payload;
+    public void setPayload(byte[] bytes) {
+        byte[] decodedData = Base64.decodeBase64(bytes);
+
+        this.payload = Arrays.copyOf(decodedData, decodedData.length - 4);
         updateStatus(MessageDecoderStatus.DONE);
     }
 
-
-
     public void encode() throws IOException{
-        Log.d("OMGDecoder", "encode: "+inputStream.read()); /// Workaround because first byte is 255 somehow
+        d("OMGDecoder", "encode: "+inputStream.read()); /// Workaround because first byte is 255 somehow
         decodeContainerMessage();
     }
 

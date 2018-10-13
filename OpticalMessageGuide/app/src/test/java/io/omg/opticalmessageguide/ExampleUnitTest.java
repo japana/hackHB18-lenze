@@ -119,34 +119,43 @@ public class ExampleUnitTest {
 
         byte[] payload = ArrayUtils.addAll(progId, errId);
 
-        byte[] checksum_data = {
+ /*       byte[] checksum_data = {
                 //Adler32
                 0b00000111, 0b01011010, 0b00000001 ,(byte)0b10100010
         };
 
         byte[] data = ArrayUtils.addAll(payload, checksum_data);
-
-//        Checksum checksum = new Adler32();
+*/
+        Checksum checksum = new Adler32();
 
         // update the current checksum with the specified array of bytes
-//        checksum.update(data, 0, data.length);
+        checksum.update(payload, 0, payload.length);
 
         // get the current checksum value
-//        long checksumValue = checksum.getValue();
+        long checksumValue = checksum.getValue();
 
 
-//        System.out.println("CRC32 checksum for input string is: " + String.format("%32s", Long.toBinaryString(checksumValue)).replace(' ', '0'));
+        System.out.println("CRC32 checksum for input string is: " + String.format("%32s", Long.toBinaryString(checksumValue)).replace(' ', '0'));
 
         // Adler Checksum
 //        0b00001100, 0b01101101, 0b00000010, (byte)0b10100010
 
-
+/*
         byte[] base64 = Base64.encodeBase64(data);
         byte[] delimiter = {OMGDecoder.DIVIDER};
 
-        byte[] parsebledata = ArrayUtils.add(ArrayUtils.addAll(delimiter, base64 ), OMGDecoder.DIVIDER);
+        byte[] parsebledata = ArrayUtils.addAll(delimiter, base64 );
+
+
+        for (int i:parsebledata) {
+            System.out.println(i);
+        }
+
+        System.out.println();
 
         System.out.println(new String(base64));
+
+        System.out.println(0b10000000);
 
 
         long prgId_expected = 0b01101100011111000100110001100000;
@@ -157,15 +166,15 @@ public class ExampleUnitTest {
         try (OMGDecoder decoder = new OMGDecoder()) {
             decoder.getOutputStream().write(parsebledata);
 
-            Thread.sleep(1000);
+            Thread.sleep(3000);
             Assert.assertEquals("", MessageDecoderStatus.DONE, decoder.getStatus());
 
             Message msg = decoder.getMsg();
-            Assert.assertEquals("whatever", prgId_expected, msg.getProgramId());
-            Assert.assertEquals("whatever", errId_expected, msg.getErrorId());
+            Assert.assertEquals("ProgramId", prgId_expected, msg.getProgramId());
+            Assert.assertEquals("ErrorId", errId_expected, msg.getErrorId());
         }
 
-
+*/
 
 
 
