@@ -28,12 +28,19 @@ import org.opencv.core.Scalar;
 import org.opencv.imgproc.Imgproc;
 import org.opencv.tracking.TrackerBoosting;
 
-public class OMGActivity extends AppCompatActivity implements View.OnTouchListener, CameraBridgeViewBase.CvCameraViewListener2 {
+import java.io.IOException;
+import java.util.Observable;
+import java.util.Observer;
+
+import io.omg.opticalmessageguide.streamprocessor.OMGDecoder;
+
+public class OMGActivity extends AppCompatActivity implements View.OnTouchListener, CameraBridgeViewBase.CvCameraViewListener2, Observer {
 
     private static final String TAG = "OMGActivity";
 
     private CameraBridgeViewBase mOpenCvCameraView;
     private Mat currentFrame;
+    private OMGDecoder decoder;
 
     private BaseLoaderCallback mLoaderCallback = new BaseLoaderCallback(this) {
         @Override
@@ -100,6 +107,12 @@ public class OMGActivity extends AppCompatActivity implements View.OnTouchListen
         mOpenCvCameraView.setCvCameraViewListener(this);
         mOpenCvCameraView.enableFpsMeter();
         mOpenCvCameraView.setMaxFrameSize(640, 360);
+
+        try {
+            decoder = new OMGDecoder(this);
+        } catch (IOException ex) {
+            Log.e(TAG, ex.getMessage());
+        }
     }
 
     @Override
@@ -107,11 +120,24 @@ public class OMGActivity extends AppCompatActivity implements View.OnTouchListen
         super.onPause();
         if (mOpenCvCameraView != null)
             mOpenCvCameraView.disableView();
+        try {
+            decoder.close();
+            decoder = null;
+        } catch (IOException ex) {
+            Log.e(TAG, ex.getMessage());
+        }
     }
 
     @Override
     public void onResume() {
         super.onResume();
+        try {
+            if (decoder == null) {
+                decoder = new OMGDecoder(this);
+            }
+        } catch (IOException ex) {
+            Log.e(TAG, ex.getMessage());
+        }
         if (!OpenCVLoader.initDebug()) {
             Log.d(TAG, "Internal OpenCV library not found. Using OpenCV Manager for initialization");
             OpenCVLoader.initAsync(OpenCVLoader.OPENCV_VERSION_3_0_0, this, mLoaderCallback);
@@ -119,7 +145,6 @@ public class OMGActivity extends AppCompatActivity implements View.OnTouchListen
             Log.d(TAG, "OpenCV library found inside package. Using it!");
             mLoaderCallback.onManagerConnected(LoaderCallbackInterface.SUCCESS);
         }
-        message = "";
     }
 
     public void onDestroy() {
@@ -142,7 +167,7 @@ public class OMGActivity extends AppCompatActivity implements View.OnTouchListen
         startActivity(intent);
     }
 
-    String message = "";
+//    String message = "";
 
     public Mat onCameraFrame(CameraBridgeViewBase.CvCameraViewFrame inputFrame) {
         currentFrame = inputFrame.rgba();
@@ -155,7 +180,7 @@ public class OMGActivity extends AppCompatActivity implements View.OnTouchListen
         int offY = rectHeight;
         int gap = rectHeight / 2;
 
-        byte currentByte = 0;
+        int currentByte = 0;
 
         for (int i = 0, power = 1; i < 8; i++, power *= 2) {
 
@@ -185,12 +210,17 @@ public class OMGActivity extends AppCompatActivity implements View.OnTouchListen
 
         }
 
-
-        Log.i(TAG, "Byte: " + currentByte);
-        message += currentByte + " ";
-        if (currentByte == 127) {
-            showMessage(message);
+        try {
+            decoder.getOutputStream().write(currentByte);
+        } catch (IOException ex) {
+            Log.e(TAG, ex.getMessage());
         }
+
+//        Log.i(TAG, "Byte: " + currentByte);
+//        message += currentByte + " ";
+//        if (currentByte == 127) {
+//            showMessage(message);
+//        }
 
         return currentFrame;
     }
@@ -200,6 +230,14 @@ public class OMGActivity extends AppCompatActivity implements View.OnTouchListen
         paused = !paused;
 
         return false; // don't need subsequent touch events
+    }
+
+    @Override
+    public void update(Observable o, Object arg) {
+        if (o instanceof OMGDecoder) {
+            OMGDecoder omgDecoder = (OMGDecoder) o;
+            showMessage(omgDecoder.getMsg());
+        }
     }
 
     private boolean paused = true;
