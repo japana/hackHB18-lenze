@@ -1,6 +1,7 @@
 package io.omg.opticalmessageguide;
 
 import android.Manifest;
+import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
@@ -82,7 +83,7 @@ public class OMGActivity extends AppCompatActivity implements View.OnTouchListen
                 // Show an explanation to the user *asynchronously* -- don't block
                 // this thread waiting for the user's response! After the user
                 // sees the explanation, try again to request the permission.
-            }  else {
+            } else {
 
                 // No explanation needed, we can request the permission.
 
@@ -118,6 +119,7 @@ public class OMGActivity extends AppCompatActivity implements View.OnTouchListen
             Log.d(TAG, "OpenCV library found inside package. Using it!");
             mLoaderCallback.onManagerConnected(LoaderCallbackInterface.SUCCESS);
         }
+        message = "";
     }
 
     public void onDestroy() {
@@ -134,41 +136,61 @@ public class OMGActivity extends AppCompatActivity implements View.OnTouchListen
         currentFrame.release();
     }
 
-    public Mat onCameraFrame(CameraBridgeViewBase.CvCameraViewFrame inputFrame) {
+    public void showMessage(String message) {
+        Intent intent = new Intent(this, MessageActivity.class);
+        intent.putExtra("message", message);
+        startActivity(intent);
+    }
 
+    String message = "";
+
+    public Mat onCameraFrame(CameraBridgeViewBase.CvCameraViewFrame inputFrame) {
         currentFrame = inputFrame.rgba();
 
-        processImage(currentFrame);
+//        byte currentByte = processImage(currentFrame);
 
-//        int rectHeight = currentFrame.height() / 24;
-//        int rectWidth = rectHeight / 2;
-//        int offX = currentFrame.width() / 2 - rectWidth / 2;
-//        int offY = rectHeight;
-//        int gap = rectHeight / 2;
-//
-//        for (int i = 0; i < 8; i++) {
-//
-//            // Compute average color
-//            Mat mask = new Mat(currentFrame.height(), currentFrame.width(), CvType.CV_8UC1);
-//            Imgproc.rectangle(mask, new Point(offX, offY+gap*i+rectHeight*i), new Point(offX+rectWidth, offY+gap*i+rectHeight*(i+1)), new Scalar(255), Core.FILLED);
-//            Scalar mean = Core.mean(currentFrame, mask);
-//
-//            // print status text
-//            Imgproc.putText (
-//                    currentFrame,                          // Matrix obj of the image
-//                    (mean.val[1] > 140 ? "1" : "0") + " (" +((int)mean.val[0]) + ", " + ((int)mean.val[1]) + ", " + ((int)mean.val[2]) + ")",          // Text to be added
-//                    new Point(offX+rectWidth*2, offY+gap*i+rectHeight*(i+1)),               // point
-//                    Core.FONT_HERSHEY_SIMPLEX ,      // front face
-//                    1,                               // front scale
-//                    new Scalar(0, 0, 255),             // Scalar object for color
-//                    4                                // Thickness
-//            );
-//            mask.release();
-//
-//            // Draw red rectangle
-//            Imgproc.rectangle(currentFrame, new Point(offX, offY+gap*i+rectHeight*i), new Point(offX+rectWidth, offY+gap*i+rectHeight*(i+1)), new Scalar(255, 0, 0), 4);
-//        }
+        int rectHeight = currentFrame.height() / 16;
+        int rectWidth = rectHeight / 2;
+        int offX = currentFrame.width() / 2 - rectWidth / 2;
+        int offY = rectHeight;
+        int gap = rectHeight / 2;
 
+        byte currentByte = 0;
+
+        for (int i = 0, power = 1; i < 8; i++, power *= 2) {
+
+            // Compute average color
+            Mat mask = new Mat(currentFrame.height(), currentFrame.width(), CvType.CV_8UC1);
+            Imgproc.rectangle(mask, new Point(offX, offY + gap * i + rectHeight * i), new Point(offX + rectWidth, offY + gap * i + rectHeight * (i + 1)), new Scalar(255), Core.FILLED);
+            Scalar mean = Core.mean(currentFrame, mask);
+
+            // print status text
+            Imgproc.putText(
+                    currentFrame,                          // Matrix obj of the image
+                    (mean.val[1] > 140 ? "1" : "0") + " (" + ((int) mean.val[0]) + ", " + ((int) mean.val[1]) + ", " + ((int) mean.val[2]) + ")",          // Text to be added
+                    new Point(offX + rectWidth * 2, offY + gap * i + rectHeight * (i + 1)),               // point
+                    Core.FONT_HERSHEY_SIMPLEX,      // front face
+                    1,                               // front scale
+                    new Scalar(0, 0, 255),             // Scalar object for color
+                    4                                // Thickness
+            );
+            mask.release();
+
+            if (mean.val[1] > 120) {
+                currentByte += power;
+            }
+
+            // Draw red rectangle
+            Imgproc.rectangle(currentFrame, new Point(offX, offY + gap * i + rectHeight * i), new Point(offX + rectWidth, offY + gap * i + rectHeight * (i + 1)), new Scalar(255, 0, 0), 4);
+
+        }
+
+
+        Log.i(TAG, "Byte: " + currentByte);
+        message += currentByte + " ";
+        if (currentByte == 127) {
+            showMessage(message);
+        }
 
         return currentFrame;
     }
@@ -186,9 +208,15 @@ public class OMGActivity extends AppCompatActivity implements View.OnTouchListen
 
     public byte processImage(Mat frame) {
 
-        if (paused) {
+        if (paused && bbox == null) {
             bbox = new Rect2d(53, 21, 58, 234);
-        } else if (trackerBooster == null ) {
+            if (trackerBooster != null) {
+                trackerBooster.clear();
+            }
+            trackerBooster = null;
+        }
+
+        if (!paused && trackerBooster == null) {
             trackerBooster = TrackerBoosting.create();
             trackerBooster.init(frame, bbox);
         }
