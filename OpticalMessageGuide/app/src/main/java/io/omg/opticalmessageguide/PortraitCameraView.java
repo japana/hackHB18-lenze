@@ -98,16 +98,18 @@ public class PortraitCameraView extends CameraBridgeViewBase implements Camera.P
                         params.setRecordingHint(true);
 
                     List<String> FocusModes = params.getSupportedFocusModes();
-                    if (FocusModes != null && FocusModes.contains(Camera.Parameters.FOCUS_MODE_MACRO))
-                    {
-                        params.setFocusMode(Camera.Parameters.FOCUS_MODE_MACRO);
-                    } else if (FocusModes != null && FocusModes.contains(Camera.Parameters.FOCUS_MODE_CONTINUOUS_VIDEO))
-                    {
-                        params.setFocusMode(Camera.Parameters.FOCUS_MODE_CONTINUOUS_VIDEO);
-                    } else if (FocusModes != null && FocusModes.contains(Camera.Parameters.FOCUS_MODE_AUTO))
+//                    if (FocusModes != null && FocusModes.contains(Camera.Parameters.FOCUS_MODE_MACRO))
+//                    {
+//                        params.setFocusMode(Camera.Parameters.FOCUS_MODE_MACRO);
+//                    } else if (FocusModes != null && FocusModes.contains(Camera.Parameters.FOCUS_MODE_CONTINUOUS_VIDEO))
+//                    {
+//                        params.setFocusMode(Camera.Parameters.FOCUS_MODE_CONTINUOUS_VIDEO);
+//                    } else
+                        if (FocusModes != null && FocusModes.contains(Camera.Parameters.FOCUS_MODE_AUTO))
                     {
                         params.setFocusMode(Camera.Parameters.FOCUS_MODE_AUTO);
-                    } else if (FocusModes != null && FocusModes.contains(Camera.Parameters.FOCUS_MODE_CONTINUOUS_VIDEO))
+                    } else
+                        if (FocusModes != null && FocusModes.contains(Camera.Parameters.FOCUS_MODE_CONTINUOUS_VIDEO))
                     {
                         params.setFocusMode(Camera.Parameters.FOCUS_MODE_CONTINUOUS_VIDEO);
                     }

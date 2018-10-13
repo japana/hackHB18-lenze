@@ -174,11 +174,44 @@ public class OMGActivity extends AppCompatActivity implements View.OnTouchListen
 
 //        byte currentByte = processImage(currentFrame);
 
-        int rectHeight = currentFrame.height() / 16;
+        int currentByte = fallbackProcess(currentFrame);
+
+        try {
+            decoder.getOutputStream().write(currentByte);
+        } catch (IOException ex) {
+            Log.e(TAG, ex.getMessage());
+        }
+
+        return currentFrame;
+    }
+
+    public boolean onTouch(View v, MotionEvent event) {
+
+        paused = !paused;
+
+        return false; // don't need subsequent touch events
+    }
+
+    @Override
+    public void update(Observable o, Object arg) {
+        if (o instanceof OMGDecoder) {
+            OMGDecoder omgDecoder = (OMGDecoder) o;
+            showMessage(omgDecoder.getMsg());
+            try {
+                omgDecoder.close();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+    }
+
+    public int fallbackProcess(Mat frame) {
+
+        int rectHeight = currentFrame.height() / 20;
         int rectWidth = rectHeight / 2;
         int offX = currentFrame.width() / 2 - rectWidth / 2;
         int offY = rectHeight;
-        int gap = rectHeight / 2;
+        int gap = rectHeight;
 
         int currentByte = 0;
 
@@ -201,43 +234,15 @@ public class OMGActivity extends AppCompatActivity implements View.OnTouchListen
             );
             mask.release();
 
-            if (mean.val[1] > 120) {
+            if (mean.val[1] > 150) {
                 currentByte += power;
             }
 
             // Draw red rectangle
-            Imgproc.rectangle(currentFrame, new Point(offX, offY + gap * i + rectHeight * i), new Point(offX + rectWidth, offY + gap * i + rectHeight * (i + 1)), new Scalar(255, 0, 0), 4);
+            Imgproc.rectangle(currentFrame, new Point(offX, offY + gap * i + rectHeight * i), new Point(offX + rectWidth, offY + gap * i + rectHeight * (i + 1)), new Scalar(255, 0, 0), 3);
 
         }
-
-        try {
-            decoder.getOutputStream().write(currentByte);
-        } catch (IOException ex) {
-            Log.e(TAG, ex.getMessage());
-        }
-
-//        Log.i(TAG, "Byte: " + currentByte);
-//        message += currentByte + " ";
-//        if (currentByte == 127) {
-//            showMessage(message);
-//        }
-
-        return currentFrame;
-    }
-
-    public boolean onTouch(View v, MotionEvent event) {
-
-        paused = !paused;
-
-        return false; // don't need subsequent touch events
-    }
-
-    @Override
-    public void update(Observable o, Object arg) {
-        if (o instanceof OMGDecoder) {
-            OMGDecoder omgDecoder = (OMGDecoder) o;
-            showMessage(omgDecoder.getMsg());
-        }
+        return currentByte;
     }
 
     private boolean paused = true;
