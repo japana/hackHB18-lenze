@@ -1,6 +1,8 @@
 package io.omg.opticalmessageguide.streamprocessor;
 
-public class Message {
+import java.io.Serializable;
+
+public class Message implements Serializable {
 
     private long programId;
     private int errorId;

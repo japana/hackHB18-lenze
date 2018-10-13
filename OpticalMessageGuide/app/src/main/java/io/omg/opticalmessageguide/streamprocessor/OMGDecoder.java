@@ -36,11 +36,11 @@ public class OMGDecoder extends Observable implements Runnable, Closeable {
         finish = true;
     }
 
-    public String getMsg() {
+    public Message getMsg() {
 
 //        byte[] b64 = Base64.decodeBase64(payload);
 
-        return new String(payload);
+        return MessageParser.parse(payload);
     }
 
     public OMGDecoder(Observer... observers) throws IOException {
