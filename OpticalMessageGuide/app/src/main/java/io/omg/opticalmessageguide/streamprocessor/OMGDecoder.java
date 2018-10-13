@@ -11,6 +11,8 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.PipedInputStream;
 import java.io.PipedOutputStream;
+import java.nio.ByteBuffer;
+import java.util.Arrays;
 import java.util.Observable;
 import java.util.Observer;
 
@@ -25,11 +27,16 @@ public class OMGDecoder extends Observable implements Runnable, Closeable {
     private byte[] payload;
 
 
+    private MessageDecoderStatus status = MessageDecoderStatus.STOPPED;
 
     private boolean finish = false;
 
     public OutputStream getOutputStream() {
         return outputStream;
+    }
+
+    public MessageDecoderStatus getStatus() {
+        return status;
     }
 
     public void finish() {
@@ -59,6 +66,7 @@ public class OMGDecoder extends Observable implements Runnable, Closeable {
         do {
             inputStream.read(nextByte);
             if (DIVIDER == nextByte[0]) {
+                status = MessageDecoderStatus.STARTED;
                 decodePayload(inputStream);
             }
         } while(!finish);
@@ -66,6 +74,7 @@ public class OMGDecoder extends Observable implements Runnable, Closeable {
     }
 
     public void decodePayload(InputStream inputStr) throws IOException {
+        updateStatus(MessageDecoderStatus.STARTED);
         byte[] nextByte = new byte[1];
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
         byte lastByte=DIVIDER;
@@ -75,7 +84,12 @@ public class OMGDecoder extends Observable implements Runnable, Closeable {
             if (lastByte != nextByte[0]) { //skip double bytes. This will be forbidden by design
                 switch (nextByte[0]) {
                     case DIVIDER:
-                        setPayload(baos.toByteArray());
+                        if (verify(baos.toByteArray())) {
+                            setPayload(baos.toByteArray());
+                        } else {
+                            updateStatus(MessageDecoderStatus.ERROR);
+                        }
+
                         return;
                     case REPEATER_1:
                     case REPEATER_2:
@@ -92,10 +106,15 @@ public class OMGDecoder extends Observable implements Runnable, Closeable {
 
     }
 
+    private boolean verify(byte[] bytes) {
+//        byte[] data = Arrays.copyOf(bytes, bytes.length - 4);
+//        byte[] checksum = Arrays.
+        return true;
+    }
+
     public void setPayload(byte[] payload) {
         this.payload = payload;
-        this.setChanged();
-        notifyObservers(payload);
+        updateStatus(MessageDecoderStatus.DONE);
     }
 
 
@@ -112,11 +131,18 @@ public class OMGDecoder extends Observable implements Runnable, Closeable {
         inputStream.close();
     }
 
+    private void updateStatus(MessageDecoderStatus newStatus) {
+        status = newStatus;
+        setChanged();
+        notifyObservers(status);
+    }
+
     @Override
     public void run() {
        // android.os.Process.setThreadPriority(android.os.Process.THREAD_PRIORITY_BACKGROUND);
         try {
             encode();
+            updateStatus(MessageDecoderStatus.INITIALIZED);
         } catch (IOException e) {
             e.printStackTrace();
         }
