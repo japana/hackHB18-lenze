@@ -1,11 +1,15 @@
 package io.omg.opticalmessageguide;
 
+import org.apache.commons.codec.binary.Base64;
 import org.junit.Assert;
 import org.junit.Test;
 
 import java.io.ByteArrayOutputStream;
 import java.util.Observable;
 import java.util.Observer;
+import java.util.zip.Adler32;
+import java.util.zip.CRC32;
+import java.util.zip.Checksum;
 
 import io.omg.opticalmessageguide.streamprocessor.OMGDecoder;
 
@@ -20,7 +24,10 @@ public class ExampleUnitTest {
     public void testEncoder() throws Exception {
 
         String b64Original = "SGVsbG8gV29ybGQgaW4gQmFzZTY0";
+
+
         String expected = "Hello World in Base64";
+        byte[] b64Exp = Base64.encodeBase64(expected.getBytes());
 
         Observer observer = new Observer() {
             @Override
@@ -32,7 +39,19 @@ public class ExampleUnitTest {
 
         byte[] trash = "bbbbbbb".getBytes();
         byte[] header_footer = {OMGDecoder.DIVIDER};
-        byte[] helloWorld = expected.getBytes();
+        byte[] helloWorld = b64Original.getBytes();
+
+        for (byte b:helloWorld) {
+            System.out.println(String.format("%8s", Integer.toBinaryString(b & 0xFF)).replace(' ', '0'));
+        }
+
+
+        System.out.println();
+        for (byte b:b64Exp) {
+            System.out.println(String.format("%8s", Integer.toBinaryString(b & 0xFF)).replace(' ', '0'));
+        }
+
+
         ByteArrayOutputStream os = new ByteArrayOutputStream();
         os.write(trash);
         os.write(header_footer);
@@ -45,12 +64,70 @@ public class ExampleUnitTest {
 
             Thread.sleep(1000);
             String value = decoder.getMsg();
-            Assert.assertEquals("whatever", "Helo World in Base64", value);
+            Assert.assertEquals("whatever", "Hello World in Base64", value);
         }
 
 
 
 
     }
+
+
+    @Test
+    public void testCreationString() {
+
+        String test = "Hello World";
+        byte[] base64 = Base64.encodeBase64(test.getBytes());
+
+        System.out.println(new String(base64));
+
+        byte b = (byte)0b10000000;
+        System.out.println(""+ b + " = "+String.format("%8s", Integer.toBinaryString(b & 0xFF)).replace(' ', '0'));
+
+        Checksum checksum = new Adler32();
+
+
+        // update the current checksum with the specified array of bytes
+        checksum.update(base64, 0, base64.length);
+
+        // get the current checksum value
+        long checksumValue = checksum.getValue();
+
+        System.out.println("CRC32 checksum for input string is: " + Long.toBinaryString(checksumValue));
+
+    }
+
+
+    @Test
+    public void testDataArray() {
+        byte[] data = {
+          // progId
+          0b01101100, 0b01111100, 0b01001100, 0b01100000,
+
+          // errId
+          0b00000011, 0b00001010
+        };
+
+        byte[] base64 = Base64.encodeBase64(data);
+
+        System.out.println(new String(base64));
+
+        byte b = (byte)0b10000000;
+        System.out.println(""+ b + " = "+String.format("%8s", Integer.toBinaryString(b & 0xFF)).replace(' ', '0'));
+
+        Checksum checksum = new Adler32();
+
+
+        // update the current checksum with the specified array of bytes
+        checksum.update(base64, 0, base64.length);
+
+        // get the current checksum value
+        long checksumValue = checksum.getValue();
+
+        System.out.println("CRC32 checksum for input string is: " + Long.toBinaryString(checksumValue));
+
+    }
+
+
 
 }

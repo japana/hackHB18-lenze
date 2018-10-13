@@ -1,9 +1,11 @@
 package io.omg.opticalmessageguide.streamprocessor;
 
-import android.util.Base64;
+
+import org.apache.commons.codec.binary.Base64;
 import android.util.Log;
 
 import java.io.ByteArrayOutputStream;
+import java.io.Closeable;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -12,9 +14,11 @@ import java.io.PipedOutputStream;
 import java.util.Observable;
 import java.util.Observer;
 
-public class OMGDecoder extends Observable implements MessageDecoder, Runnable {
+public class OMGDecoder extends Observable implements Runnable, Closeable {
 
-    public static final byte DIVIDER = (byte)0b11111111;
+    public static final byte DIVIDER        = (byte)0b11111111;
+    public static final byte REPEATER_1     = (byte)0b10000000;
+    public static final byte REPEATER_2     = (byte)0b11000000;
 
     private OutputStream outputStream;
     private InputStream inputStream;
@@ -32,11 +36,11 @@ public class OMGDecoder extends Observable implements MessageDecoder, Runnable {
         finish = true;
     }
 
-    public String getMsg() {
+    public Message getMsg() {
 
-        //byte[] b64 = Base64.decode(payload, Base64.DEFAULT);
+//        byte[] b64 = Base64.decodeBase64(payload);
 
-        return new String(payload);
+        return MessageParser.parse(payload);
     }
 
     public OMGDecoder(Observer... observers) throws IOException {
@@ -65,15 +69,22 @@ public class OMGDecoder extends Observable implements MessageDecoder, Runnable {
         byte[] nextByte = new byte[1];
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
         byte lastByte=DIVIDER;
+        byte lastByteAdded=0;
         do {
             inputStream.read(nextByte);
             if (lastByte != nextByte[0]) { //skip double bytes. This will be forbidden by design
-                if (DIVIDER != nextByte[0]) {
-                    baos.write(nextByte);
-                } else {
-                    setPayload(baos.toByteArray());
-                    return;
+                switch (nextByte[0]) {
+                    case DIVIDER:
+                        setPayload(baos.toByteArray());
+                        return;
+                    case REPEATER_1:
+                    case REPEATER_2:
+                        baos.write(new byte[] {lastByteAdded});
+                    default:
+                        baos.write(nextByte);
+                        lastByteAdded = nextByte[0];
                 }
+
                 lastByte = nextByte[0];
             }
 
