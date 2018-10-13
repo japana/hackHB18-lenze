@@ -236,9 +236,6 @@ public class OMGActivity extends AppCompatActivity implements View.OnTouchListen
         if (o instanceof OMGDecoder) {
             OMGDecoder omgDecoder = (OMGDecoder) o;
             switch (omgDecoder.getStatus()) {
-                case ERROR:
-                    showMessage(new Message(-1, -1, "Parsing of the Message failed!"));
-                    break;
                 case DONE:
                     showMessage(omgDecoder.getMsg());
                     break;
