@@ -37,10 +37,11 @@ public class OMGDecoder extends Observable implements MessageDecoder, Runnable {
         outputStream = new PipedOutputStream();
         inputStream = new PipedInputStream();
         ((PipedInputStream)inputStream).connect((PipedOutputStream)outputStream);
+        new Thread(this).start();
         for (Observer obs : observers) {
             this.addObserver(obs);
         }
-        new Thread(this).start();
+
     }
 
     public void decodeContainerMessage() throws IOException{
@@ -73,7 +74,8 @@ public class OMGDecoder extends Observable implements MessageDecoder, Runnable {
 
     public void setPayload(byte[] payload) {
         this.payload = payload;
-        notifyObservers();
+        this.setChanged();
+        notifyObservers(payload);
     }
 
 
