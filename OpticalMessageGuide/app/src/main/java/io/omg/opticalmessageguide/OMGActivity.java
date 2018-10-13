@@ -32,6 +32,7 @@ import java.io.IOException;
 import java.util.Observable;
 import java.util.Observer;
 
+import io.omg.opticalmessageguide.streamprocessor.Message;
 import io.omg.opticalmessageguide.streamprocessor.OMGDecoder;
 
 import static org.opencv.core.Core.log;
@@ -165,7 +166,7 @@ public class OMGActivity extends AppCompatActivity implements View.OnTouchListen
         currentFrame.release();
     }
 
-    public void showMessage(String message) {
+    public void showMessage(Message message) {
         Intent intent = new Intent(this, MessageActivity.class);
         intent.putExtra("message", message);
         startActivity(intent);
