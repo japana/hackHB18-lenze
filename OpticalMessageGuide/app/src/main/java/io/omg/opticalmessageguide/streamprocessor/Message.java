@@ -9,7 +9,6 @@ public class Message implements Serializable {
 
     private String message;
 
-
     private String hint;
 
     public Message(){}
@@ -18,6 +17,10 @@ public class Message implements Serializable {
         this.programId = programId;
         this.errorId = errorId;
         this.message = message;
+    }
+
+    public Message() {
+
     }
 
     public long getProgramId() {
