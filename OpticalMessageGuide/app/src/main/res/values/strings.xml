@@ -2,4 +2,7 @@
     <string name="app_name">OpticalMessageGuide</string>
     <string name="scan_button">Scan Again</string>
     <string name="decoder_status">Decoder Status</string>
+    <string name="alignLEDs">Please align LEDs and Rectangles</string>
+    <string name="holdStill">Reading, please hold still</string>
+    <string name="transmissionFailed">Transmission failed, try again</string>
 </resources>

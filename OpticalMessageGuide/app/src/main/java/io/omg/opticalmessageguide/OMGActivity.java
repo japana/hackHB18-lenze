@@ -13,6 +13,7 @@ import android.view.SurfaceView;
 import android.view.View;
 import android.view.Window;
 import android.view.WindowManager;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import org.opencv.android.BaseLoaderCallback;
@@ -119,6 +120,7 @@ public class OMGActivity extends AppCompatActivity implements View.OnTouchListen
         } catch (IOException ex) {
             Log.e(TAG, ex.getMessage());
         }
+        updateMessage();
     }
 
     @Override
@@ -151,6 +153,7 @@ public class OMGActivity extends AppCompatActivity implements View.OnTouchListen
             Log.d(TAG, "OpenCV library found inside package. Using it!");
             mLoaderCallback.onManagerConnected(LoaderCallbackInterface.SUCCESS);
         }
+        updateMessage();
     }
 
     public void onDestroy() {
@@ -194,15 +197,15 @@ public class OMGActivity extends AppCompatActivity implements View.OnTouchListen
         millis = nowMillis;
 */
 
-        Imgproc.putText(
-                currentFrame,                          // Matrix obj of the image
-                decoder.getStatus().name(),          // Text to be added
-                new Point(10, 20),               // point
-                Core.FONT_HERSHEY_DUPLEX,      // front face
-                0.7,                               // front scale
-                new Scalar(139, 210, 239),             // Scalar object for color
-                1                                // Thickness
-        );
+//        Imgproc.putText(
+//                currentFrame,                          // Matrix obj of the image
+//                decoder.getStatus().name(),          // Text to be added
+//                new Point(10, 20),               // point
+//                Core.FONT_HERSHEY_DUPLEX,      // front face
+//                0.7,                               // front scale
+//                new Scalar(139, 210, 239),             // Scalar object for color
+//                1                                // Thickness
+//        );
 
 //        byte currentByte = processImage(currentFrame);
 
@@ -230,14 +233,32 @@ public class OMGActivity extends AppCompatActivity implements View.OnTouchListen
 
     @Override
     public void update(Observable o, Object arg) {
-        if (o instanceof OMGDecoder) {
-            OMGDecoder omgDecoder = (OMGDecoder) o;
-            switch (omgDecoder.getStatus()) {
-                case DONE:
-                    showMessage(omgDecoder.getMsg());
-                    break;
+        updateMessage();
+    }
+
+    public void updateMessage() {
+        runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                if (decoder != null) {
+                    switch (decoder.getStatus()) {
+                        case ERROR:
+                            ((TextView) findViewById(R.id.decoderStatus)).setText(R.string.transmissionFailed);
+                            break;
+                        case WAITING:
+                        case INITIALIZED:
+                            ((TextView) findViewById(R.id.decoderStatus)).setText(R.string.alignLEDs);
+                            break;
+                        case STARTED:
+                            ((TextView) findViewById(R.id.decoderStatus)).setText(R.string.holdStill);
+                            break;
+                        case DONE:
+                            showMessage(decoder.getMsg());
+                            break;
+                    }
+                }
             }
-        }
+        });
     }
 
     public int fallbackProcess(Mat frame) {
@@ -299,7 +320,7 @@ public class OMGActivity extends AppCompatActivity implements View.OnTouchListen
 
 */
             // Draw white rectangle
-            Imgproc.rectangle(currentFrame, new Point(offX, offY + hgap + rectHeight * i), new Point(offX + rectWidth, offY + hgap + rectHeight * (i + 1)), decoder.getStatus() == MessageDecoderStatus.ERROR ? new Scalar(255,0,0) : new Scalar(139, 210, 239), 2);
+            Imgproc.rectangle(currentFrame, new Point(offX, offY + hgap + rectHeight * i), new Point(offX + rectWidth, offY + hgap + rectHeight * (i + 1)), decoder.getStatus() == MessageDecoderStatus.ERROR ? new Scalar(255, 0, 0) : new Scalar(139, 210, 239), 2);
 
 
             hgap += (int) (gap * (1 + Math.abs(0.25 - i / 12.0)));
