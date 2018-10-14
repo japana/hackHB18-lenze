@@ -4,6 +4,10 @@ import android.app.Activity;
 import android.content.Intent;
 import android.os.Bundle;
 import android.os.Handler;
+import android.widget.ImageView;
+
+import com.bumptech.glide.Glide;
+import com.bumptech.glide.request.target.GlideDrawableImageViewTarget;
 
 public class Splash extends Activity {
 
@@ -15,6 +19,10 @@ public class Splash extends Activity {
     public void onCreate(Bundle icicle) {
         super.onCreate(icicle);
         setContentView(R.layout.splash);
+
+        ImageView imageView = (ImageView) findViewById(R.id.splashscreen);
+        GlideDrawableImageViewTarget imageViewTarget = new GlideDrawableImageViewTarget(imageView);
+        Glide.with(this).load(R.drawable.omg_combined).into(imageViewTarget);
 
         /* New Handler to start the Menu-Activity
          * and close this Splash-Screen after some seconds.*/

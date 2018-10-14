@@ -7,6 +7,8 @@ import org.junit.Test;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.nio.ByteBuffer;
+import java.util.Arrays;
 import java.util.Observable;
 import java.util.Observer;
 import java.util.zip.Adler32;
@@ -188,6 +190,76 @@ public class ExampleUnitTest {
 
     }
 
+    byte[] calcChecksum(byte[] data) {
 
+        Checksum checksum = new Adler32();
+
+        // update the current checksum with the specified array of bytes
+        checksum.update(data, 0, data.length);
+
+        // get the current checksum value
+        int checksumValue = (int)checksum.getValue();
+
+        ByteBuffer buffer = ByteBuffer.allocate(Integer.BYTES);
+        buffer.putInt(checksumValue);
+        return buffer.array();
+
+    }
+
+    private byte[] replaceRepeatingBytes(byte[] input) {
+        byte[] retArr = Arrays.copyOf(input, input.length);
+        for (int i = 1; i<retArr.length; i++) {
+            if (retArr[i] == retArr[i-1]) {
+                retArr[i] = (byte)128;
+            }
+        }
+        return retArr;
+    }
+
+    public byte[] createTestData(int programId, char errId, float param1) {
+
+        ByteBuffer bb_payload = ByteBuffer.allocate(Integer.BYTES + Character.BYTES+Float.BYTES );
+
+        bb_payload.putInt(programId);
+        bb_payload.putChar(errId);
+        bb_payload.putFloat(param1);
+
+        byte[] payload = bb_payload.array();
+
+        ByteBuffer bb_verified = ByteBuffer.allocate(payload.length + Integer.BYTES);
+        bb_verified.put(payload).put(calcChecksum(payload));
+
+        byte[] base64 = Base64.encodeBase64(bb_verified.array());
+
+        System.out.println(new String(base64));
+
+        //byte[] encodedStream = ByteBuffer.allocate(base64.length+1).put((byte)255).put(replaceRepeatingBytes(base64)).array();
+
+        return replaceRepeatingBytes(base64);
+
+    }
+
+
+    @Test
+    public void validateTestData() throws Exception{
+        byte[] testData = createTestData(1234,(char)5, 6.4f);
+
+        for (byte b:testData) {
+            System.out.println((int)b);
+        }
+
+        try (OMGDecoder decoder = new OMGDecoder()) {
+            decoder.getOutputStream().write(testData);
+
+            Thread.sleep(3000);
+            //Assert.assertEquals("", MessageDecoderStatus.DONE, decoder.getStatus());
+
+            Message msg = decoder.getMsg();
+            Assert.assertEquals("ProgramId", 1234, msg.getProgramId());
+            Assert.assertEquals("ErrorId", 5, msg.getErrorId());
+        }
+
+
+    }
 
 }
