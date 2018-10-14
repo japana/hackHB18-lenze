@@ -34,6 +34,10 @@ import java.util.Observer;
 
 import io.omg.opticalmessageguide.streamprocessor.OMGDecoder;
 
+import static org.opencv.core.Core.log;
+import static org.opencv.core.Core.mean;
+import static org.opencv.core.Core.pow;
+
 public class OMGActivity extends AppCompatActivity implements View.OnTouchListener, CameraBridgeViewBase.CvCameraViewListener2, Observer {
 
     private static final String TAG = "OMGActivity";
@@ -167,20 +171,39 @@ public class OMGActivity extends AppCompatActivity implements View.OnTouchListen
         startActivity(intent);
     }
 
-//    String message = "";
+    private int lastByte = 0;
+    private long millis = 0;
 
     public Mat onCameraFrame(CameraBridgeViewBase.CvCameraViewFrame inputFrame) {
+
         currentFrame = inputFrame.rgba();
+
+        long nowMillis = System.currentTimeMillis();
+        // print status text
+        Imgproc.putText(
+                currentFrame,                          // Matrix obj of the image
+                "FPS: "+1000/(nowMillis-millis),          // Text to be added
+                new Point(10, 100),               // point
+                Core.FONT_HERSHEY_SIMPLEX,      // front face
+                1,                               // front scale
+                new Scalar(0, 255, 255),             // Scalar object for color
+                3                                // Thickness
+        );
+        millis = nowMillis;
 
 //        byte currentByte = processImage(currentFrame);
 
         int currentByte = fallbackProcess(currentFrame);
 
         try {
-            decoder.getOutputStream().write(currentByte);
+            if(lastByte == currentByte) {
+                decoder.getOutputStream().write(currentByte);
+            }
         } catch (IOException ex) {
             Log.e(TAG, ex.getMessage());
         }
+
+        lastByte = currentByte;
 
         return currentFrame;
     }
@@ -217,30 +240,48 @@ public class OMGActivity extends AppCompatActivity implements View.OnTouchListen
 
         for (int i = 0, power = 1; i < 8; i++, power *= 2) {
 
-            // Compute average color
-            Mat mask = new Mat(currentFrame.height(), currentFrame.width(), CvType.CV_8UC1);
-            Imgproc.rectangle(mask, new Point(offX, offY + gap * i + rectHeight * i), new Point(offX + rectWidth, offY + gap * i + rectHeight * (i + 1)), new Scalar(255), Core.FILLED);
-            Scalar mean = Core.mean(currentFrame, mask);
+            Mat submat = frame.submat(offY + gap * i + rectHeight * i, offY + gap * i + rectHeight * (i + 1), offX, offX + rectWidth);
+
+            int value;
+            boolean status;
+
+            boolean meanMode = false;
+
+            if (meanMode) {
+                Scalar mean = Core.mean(submat);
+                value = (int) mean.val[1];
+                status = value > 180;
+            } else {
+                value = 0;
+                for (int y = 0; y < submat.rows(); y++) {
+                    for (int x = 0; x < submat.cols(); x++) {
+                        if (submat.get(y, x)[1] > 200) {
+                            value++;
+                        }
+                    }
+                }
+                value = value * 255 / (rectWidth * rectHeight);
+                status = value > 160;
+            }
+
+            if (status) {
+                currentByte += power;
+            }
 
             // print status text
             Imgproc.putText(
                     currentFrame,                          // Matrix obj of the image
-                    (mean.val[1] > 140 ? "1" : "0") + " ("
+                    (status ? "1" : "0") + " ("
                             // + ((int) mean.val[0]) + ", " +
-                            + ((int) mean.val[1])
-                    // + ", " + ((int) mean.val[2])
-                    + ")",          // Text to be added
+                            + (value)
+                            // + ", " + ((int) mean.val[2])
+                            + ")",          // Text to be added
                     new Point(offX + rectWidth * 2, offY + gap * i + rectHeight * (i + 1)),               // point
                     Core.FONT_HERSHEY_SIMPLEX,      // front face
                     1,                               // front scale
                     new Scalar(0, 0, 255),             // Scalar object for color
                     4                                // Thickness
             );
-            mask.release();
-
-            if (mean.val[1] > 120) {
-                currentByte += power;
-            }
 
             // Draw red rectangle
             Imgproc.rectangle(currentFrame, new Point(offX, offY + gap * i + rectHeight * i), new Point(offX + rectWidth, offY + gap * i + rectHeight * (i + 1)), new Scalar(255, 0, 0), 3);
