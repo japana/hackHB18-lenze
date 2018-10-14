@@ -9,14 +9,15 @@ public class Message implements Serializable {
 
     private String message;
 
+
+    private String hint;
+
+    public Message(){}
+
     public Message(long programId, int errorId, String message) {
         this.programId = programId;
         this.errorId = errorId;
         this.message = message;
-    }
-
-    public Message() {
-
     }
 
     public long getProgramId() {
@@ -42,5 +43,14 @@ public class Message implements Serializable {
     public void setMessage(String message) {
         this.message = message;
     }
+
+    public String getHint() {
+        return hint;
+    }
+
+    public void setHint(String hint) {
+        this.hint = hint;
+    }
+
 
 }

@@ -168,11 +168,6 @@ public class OMGActivity extends AppCompatActivity implements View.OnTouchListen
     }
 
     public void showMessage(Message message) {
-        try {
-            decoder.close();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
         Intent intent = new Intent(this, MessageActivity.class);
         intent.putExtra("message", message);
         startActivity(intent);
@@ -184,7 +179,7 @@ public class OMGActivity extends AppCompatActivity implements View.OnTouchListen
     public Mat onCameraFrame(CameraBridgeViewBase.CvCameraViewFrame inputFrame) {
 
         currentFrame = inputFrame.rgba();
-
+/*
         long nowMillis = System.currentTimeMillis();
         // print status text
         Imgproc.putText(
@@ -197,14 +192,16 @@ public class OMGActivity extends AppCompatActivity implements View.OnTouchListen
                 3                                // Thickness
         );
         millis = nowMillis;
+*/
+
         Imgproc.putText(
                 currentFrame,                          // Matrix obj of the image
                 decoder.getStatus().name(),          // Text to be added
-                new Point(10, 140),               // point
-                Core.FONT_HERSHEY_SIMPLEX,      // front face
-                1,                               // front scale
-                new Scalar(0, 255, 255),             // Scalar object for color
-                3                                // Thickness
+                new Point(10, 20),               // point
+                Core.FONT_HERSHEY_DUPLEX,      // front face
+                0.7,                               // front scale
+                new Scalar(139, 210, 239),             // Scalar object for color
+                1                                // Thickness
         );
 
 //        byte currentByte = processImage(currentFrame);
@@ -236,9 +233,6 @@ public class OMGActivity extends AppCompatActivity implements View.OnTouchListen
         if (o instanceof OMGDecoder) {
             OMGDecoder omgDecoder = (OMGDecoder) o;
             switch (omgDecoder.getStatus()) {
-                case ERROR:
-                    showMessage(new Message(-1, -1, "Parsing of the Message failed!"));
-                    break;
                 case DONE:
                     showMessage(omgDecoder.getMsg());
                     break;
@@ -287,7 +281,7 @@ public class OMGActivity extends AppCompatActivity implements View.OnTouchListen
             if (status) {
                 currentByte += power;
             }
-
+/*
             // print status text
             Imgproc.putText(
                     currentFrame,                          // Matrix obj of the image
@@ -296,15 +290,16 @@ public class OMGActivity extends AppCompatActivity implements View.OnTouchListen
                             + (value)
                             // + ", " + ((int) mean.val[2])
                             + ")",          // Text to be added
-                    new Point(offX + rectWidth * 2, offY + hgap + rectHeight * (i + 1)),               // point
+                    new Point(offX + rectWidth * 2, offY + gap * i + rectHeight * (i + 1)),               // point
                     Core.FONT_HERSHEY_SIMPLEX,      // front face
                     1,                               // front scale
                     new Scalar(0, 0, 255),             // Scalar object for color
                     4                                // Thickness
             );
 
-            // Draw red rectangle
-            Imgproc.rectangle(currentFrame, new Point(offX, offY + hgap + rectHeight * i), new Point(offX + rectWidth, offY + hgap + rectHeight * (i + 1)), decoder.getStatus() == MessageDecoderStatus.STARTED ? new Scalar(0, 0, 255) : new Scalar(255, 0, 0), 3);
+*/
+            // Draw white rectangle
+            Imgproc.rectangle(currentFrame, new Point(offX, offY + hgap + rectHeight * i), new Point(offX + rectWidth, offY + hgap + rectHeight * (i + 1)), decoder.getStatus() == MessageDecoderStatus.ERROR ? new Scalar(255,0,0) : new Scalar(139, 210, 239), 2);
 
 
             hgap += (int) (gap * (1 + Math.abs(0.25 - i / 12.0)));
