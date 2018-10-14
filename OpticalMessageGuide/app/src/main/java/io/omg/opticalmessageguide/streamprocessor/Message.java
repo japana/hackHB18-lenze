@@ -20,6 +20,7 @@ public class Message implements Serializable {
         this.message = message;
     }
 
+
     public long getProgramId() {
         return programId;
     }

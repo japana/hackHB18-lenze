@@ -20,11 +20,11 @@ public class MessageActivity extends AppCompatActivity {
 
         // Capture the layout's TextView and set the string as its text
         TextView messagetextView = findViewById(R.id.messageTextView);
-        messagetextView.setText(msg.getMessage());
+        messagetextView.setText(msg.getMessage() + "\n\n* " + msg.getHint());
 
         TextView errorCodeTextView = findViewById(R.id.errorCodeTextView);
         String error = msg.getErrorId()+"";
-        errorCodeTextView.setText(error);
+        errorCodeTextView.setText("Errorcode: " + error);
 
     }
 
