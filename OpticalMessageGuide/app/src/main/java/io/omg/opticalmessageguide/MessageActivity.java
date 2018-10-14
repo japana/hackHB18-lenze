@@ -6,6 +6,8 @@ import android.os.Bundle;
 import android.view.View;
 import android.widget.TextView;
 
+import io.omg.opticalmessageguide.streamprocessor.Message;
+
 public class MessageActivity extends AppCompatActivity {
 
     @Override
@@ -14,11 +16,15 @@ public class MessageActivity extends AppCompatActivity {
         setContentView(R.layout.activity_message);
         // Get the Intent that started this activity and extract the string
         Intent intent = getIntent();
-        String message = intent.getStringExtra("message");
+        Message msg = (Message)intent.getSerializableExtra("message");
 
         // Capture the layout's TextView and set the string as its text
-        TextView textView = findViewById(R.id.messageTextView);
-        textView.setText(message);
+        TextView messagetextView = findViewById(R.id.messageTextView);
+        messagetextView.setText(msg.getMessage());
+
+        TextView errorCodeTextView = findViewById(R.id.errorCodeTextView);
+        String error = msg.getErrorId()+"";
+        errorCodeTextView.setText(error);
 
     }
 
